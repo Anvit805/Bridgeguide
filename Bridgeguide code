@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BridgeGuide - Subject Selection</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; padding:0; }
+    header { display:flex; align-items:center; background:#003366; padding:20px; color:white; }
+    header img { height:80px; margin-right:20px; }
+    header h1 { font-size:26px; }
+    .container { width:90%; max-width:1400px; margin:20px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.15); }
+    h2 { color:#003366; }
+    label { font-weight:bold; display:block; margin-top:12px; }
+    input[type=text], select { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; }
+    .btn { background:#003366; color:white; padding:12px 22px; border:none; border-radius:6px; margin-top:18px; cursor:pointer; }
+    .btn:hover { background:#0055a5; }
+    .result { margin-top:25px; padding:18px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; }
+    .hidden { display:none; }
+    .checkboxes { columns:3; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="images/C:\Users\NIMBEKAR\Downloads\logo.png" >
+  <h1><b>Worried about subject selection at Cambridge? Don't worry, BridgeGuide will do it for free!</b></h1>
+</header>
+
+<div class="container">
+  <h2>Do you need IGCSE or A Level guidance?</h2>
+  <select id="guidanceType" onchange="toggleForms()">
+    <option value="">-- Select --</option>
+    <option value="igcse">IGCSE Guidance</option>
+    <option value="alevel">A Level Guidance</option>
+  </select>
+</div>
+
+<!-- IGCSE FORM -->
+<div class="container hidden" id="igcseForm">
+  <h2>IGCSE Subject Guidance</h2>
+  <label>What career/major are you aiming for?</label>
+  <input type="text" id="igCareer">
+  
+  <label>How many subjects can you handle?</label>
+  <input type="text" id="igNumSubjects">
+  
+  <label>Does your school offer any other English subjects? Please list</label>
+  <input type="text" id="igEnglishOptions">
+  
+  <label>Are you comfortable with British accent? (Yes/No)</label>
+  <input type="text" id="igAccent">
+  
+  <label>Choose from Cambridge IGCSE subjects your school offers:</label>
+  <div class="checkboxes" id="igSubjects"></div>
+  
+  <label>Other subjects your school offers (not listed above):</label>
+  <input type="text" id="igOther">
+  
+  <button class="btn" onclick="generateIGPlan()">Get IGCSE Plan</button>
+  <div id="igResult" class="result hidden"></div>
+</div>
+
+<!-- A LEVEL FORM -->
+<div class="container hidden" id="alevelForm">
+  <h2>A Level Subject Guidance</h2>
+  <label>What career/major are you aiming for?</label>
+  <input type="text" id="alCareer">
+  
+  <label>What are mandatory requirements for your chosen university?</label>
+  <input type="text" id="alUniReq">
+  
+  <label>Are you aiming for Ivy League / top global universities? (Yes/No)</label>
+  <input type="text" id="alTopUni">
+  
+  <label>Choose from Cambridge A Level subjects your school offers:</label>
+  <div class="checkboxes" id="alSubjects"></div>
+  
+  <label>Other subjects your school offers (not listed above):</label>
+  <input type="text" id="alOther">
+  
+  <button class="btn" onclick="generateALPlan()">Get A Level Plan</button>
+  <div id="alResult" class="result hidden"></div>
+</div>
+
+<script>
+  // Subject lists (Cambridge official offers)
+  const igcseSubjects = ["Mathematics","Additional Mathematics","Physics","Chemistry","Biology","Computer Science","ICT","French","German","Environmental Management","Geography","History","Business Studies","Economics","Accounting","Art & Design","Drama","Music"];
+  const alSubjects = ["Mathematics","Further Mathematics","Physics","Chemistry","Biology","Computer Science","Information Technology","Economics","Business","Accounting","Psychology","Sociology","Law","History","Geography","French","German","Environmental Management","English General Paper","English Language","Art & Design","Music","Drama"];
+
+  // populate subjects
+  function populateSubjects(){
+    const igDiv=document.getElementById("igSubjects");
+    igcseSubjects.forEach(s=>{ igDiv.innerHTML+=`<label><input type="checkbox" value="${s}">${s}</label>`; });
+    const alDiv=document.getElementById("alSubjects");
+    alSubjects.forEach(s=>{ alDiv.innerHTML+=`<label><input type="checkbox" value="${s}">${s}</label>`; });
+  }
+  populateSubjects();
+
+  function toggleForms(){
+    const t=document.getElementById("guidanceType").value;
+    document.getElementById("igcseForm").classList.add("hidden");
+    document.getElementById("alevelForm").classList.add("hidden");
+    if(t==="igcse") document.getElementById("igcseForm").classList.remove("hidden");
+    if(t==="alevel") document.getElementById("alevelForm").classList.remove("hidden");
+  }
+
+  // IGCSE Plan
+  function generateIGPlan(){
+    const career=document.getElementById("igCareer").value.trim().toLowerCase();
+    const num=parseInt(document.getElementById("igNumSubjects").value.trim());
+    const accent=document.getElementById("igAccent").value.trim().toLowerCase();
+    const selected=[...document.querySelectorAll("#igSubjects input:checked")].map(i=>i.value);
+    const other=document.getElementById("igOther").value.trim();
+    
+    let rec=[];
+
+    // ---- compulsory English subject logic ----
+    if(career.includes("literature")||career.includes("english")){
+      rec.push("English - First Language");
+    } else if(accent==="yes" && (career.includes("engineering")||career.includes("science")||career.includes("math")||career.includes("computer"))){
+      rec.push("English - Second Language (bit easier)");
+    } else {
+      rec.push("English Language");
+    }
+
+    // career-based recommendations
+    if(career.includes("computer")) rec.push("Mathematics","Computer Science","Physics");
+    else if(career.includes("engineering")) rec.push("Mathematics","Physics","Chemistry");
+    else if(career.includes("medicine")) rec.push("Biology","Chemistry","Physics");
+    else if(career.includes("business")) rec.push("Mathematics","Business Studies","Economics");
+    else if(career.includes("psychology")) rec.push("Psychology","Biology");
+    else rec.push("Mathematics","Economics");
+
+    // merge
+    let plan=[...new Set([...rec,...selected])];
+    if(other) plan.push(other);
+
+    // trim based on number
+    if(num && plan.length>num) plan=plan.slice(0,num);
+
+    document.getElementById("igResult").innerHTML="<h3>Recommended IGCSE Plan:</h3><ul>"+plan.map(s=>"<li>"+s+"</li>").join("")+"</ul>";
+    document.getElementById("igResult").classList.remove("hidden");
+  }
+
+  // A Level Plan
+  function generateALPlan(){
+    const career=document.getElementById("alCareer").value.trim().toLowerCase();
+    const top=document.getElementById("alTopUni").value.trim().toLowerCase();
+    const selected=[...document.querySelectorAll("#alSubjects input:checked")].map(i=>i.value);
+    const other=document.getElementById("alOther").value.trim();
+    
+    let rec=[];
+
+    if(career.includes("computer")) rec.push("Mathematics","Further Mathematics","Physics","Computer Science","Economics");
+    else if(career.includes("engineering")) rec.push("Mathematics","Further Mathematics","Physics","Chemistry","Computer Science");
+    else if(career.includes("medicine")) rec.push("Biology","Chemistry","Mathematics","Physics","Psychology");
+    else if(career.includes("business")) rec.push("Mathematics","Economics","Business","Accounting","English General Paper");
+    else if(career.includes("psychology")) rec.push("Psychology","Biology","Mathematics","Sociology","English General Paper");
+    else rec.push("Mathematics","Economics","English General Paper","History","Geography");
+
+    let plan=[...new Set([...rec,...selected])];
+    if(other) plan.push(other);
+
+    if(top==="yes" && plan.length>5) plan=plan.slice(0,5);
+
+    document.getElementById("alResult").innerHTML="<h3>Recommended A Level Plan:</h3><ul>"+plan.map(s=>"<li>"+s+"</li>").join("")+"</ul>";
+    document.getElementById("alResult").classList.remove("hidden");
+  }
+</script>
+</body>
+</html>
